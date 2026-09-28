@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Automated Urban Drone Delivery Landing Pad & Package Locker Network — Control Center">
+    <title>Drone Locker Network — Control Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════ */
+        /*  DESIGN TOKENS                              */
+        /* ═══════════════════════════════════════════ */
+        :root {
+            --bg-0: #060a10;
+            --bg-1: #0a0f18;
+            --bg-2: #0f1520;
+            --bg-3: #141c2a;
+            --bg-4: #1a2436;
+            --border: #1c2840;
+            --border-d: #1a2540;
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --t1: #e2e8f0;
+            --t2: #94a3b8;
+            --t3: #64748b;
+            --mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --sans: 'Inter', system-ui, sans-serif;
+            --sidebar-w: 250px;
+            --glow: 0 0 20px rgba(34, 211, 238, .08);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg-0);
+            color: var(--t1);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /*  SIDEBAR                                    */
+        /* ═══════════════════════════════════════════ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--bg-1);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: transform .3s ease;
+        }
+
+        .s-brand {
+            padding: 22px 18px 18px;
+            border-bottom: 1px dashed var(--border-d);
+        }
+
+        .s-brand h1 {
+            font-family: var(--mono);
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--cyan);
+            letter-spacing: 3px;
+            line-height: 1.6;
+            text-transform: uppercase;
+        }
+
+        .s-brand h1 small {
+            display: block;
+            font-size: .58rem;
+            color: var(--t3);
+            letter-spacing: 1px;
+            font-weight: 400;
+            margin-top: 3px;
+        }
+
+        .s-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 0;
+        }
+
+        .s-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            color: var(--t2);
+            cursor: pointer;
+            font-size: .78rem;
+            font-weight: 500;
+            border-left: 2px solid transparent;
+            transition: all .15s ease;
+            user-select: none;
+        }
+
+        .s-nav-item:hover {
+            background: rgba(34, 211, 238, .04);
+            color: var(--t1);
+        }
+
+        .s-nav-item.active {
+            background: rgba(34, 211, 238, .07);
+            color: var(--cyan);
+            border-left-color: var(--cyan);
+        }
+
+        .s-nav-item i {
+            font-size: .95rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        .s-footer {
+            padding: 14px 18px;
+            border-top: 1px dashed var(--border-d);
+        }
+
+        .s-footer .lbl {
+            font-family: var(--mono);
+            font-size: .6rem;
+            color: var(--t3);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+
+        .status-line {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-family: var(--mono);
+            font-size: .7rem;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            flex-shrink: 0;
+        }
+
+        .dot.off {
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red);
+        }
+
+        /* mobile */
+        .s-toggle {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1100;
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            color: var(--cyan);
+            width: 38px;
+            height: 38px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .s-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            z-index: 999;
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /*  MAIN                                       */
+        /* ═══════════════════════════════════════════ */
+        .main {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(6, 10, 16, .9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .top-bar h2 {
+            font-family: var(--mono);
+            font-size: .68rem;
+            font-weight: 500;
+            color: var(--t2);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .top-date {
+            font-family: var(--mono);
+            font-size: .68rem;
+            color: var(--t3);
+        }
+
+        .page {
+            padding: 22px;
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /*  REUSABLE COMPONENTS                        */
+        /* ═══════════════════════════════════════════ */
+
+        /* Cards */
+        .card-t {
+            background: var(--bg-2);
+            border: 1px dashed var(--border-d);
+            border-radius: 4px;
+            padding: 18px;
+            margin-bottom: 18px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .card-t:hover {
+            border-color: rgba(34, 211, 238, .25);
+            box-shadow: var(--glow);
+        }
+
+        .card-hdr {
+            font-family: var(--mono);
+            font-size: .68rem;
+            font-weight: 600;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-d);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .card-hdr i {
+            font-size: .85rem;
+        }
+
+        /* KPI */
+        .kpi {
+            background: var(--bg-2);
+            border: 1px dashed var(--border-d);
+            border-radius: 4px;
+            padding: 16px;
+            text-align: center;
+            transition: all .2s ease;
+        }
+
+        .kpi:hover {
+            border-color: rgba(34, 211, 238, .3);
+            box-shadow: var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .kpi-ico {
+            font-size: 1.35rem;
+            margin-bottom: 6px;
+        }
+
+        .kpi-val {
+            font-family: var(--mono);
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .kpi-lbl {
+            font-size: .65rem;
+            color: var(--t3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 3px;
+            font-weight: 600;
+        }
+
+        /* Tables */
+        .tbl {
+            width: 100%;
+            font-size: .8rem;
+            border-collapse: collapse;
+        }
+
+        .tbl thead th {
+            background: var(--bg-1);
+            color: var(--cyan);
+            font-family: var(--mono);
+            font-size: .65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+
+        .tbl tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(28, 40, 64, .45);
+            color: var(--t2);
+            vertical-align: middle;
+        }
+
+        .tbl tbody tr:hover {
+            background: rgba(34, 211, 238, .025);
+        }
+
+        .tbl-wrap {
+            overflow-x: auto;
+        }
+
+        .mono {
+            font-family: var(--mono);
+        }
+
+        .c-cyan {
+            color: var(--cyan);
+        }
+
+        /* Buttons */
+        .btn-c {
+            background: transparent;
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            font-family: var(--mono);
+            font-size: .7rem;
+            font-weight: 500;
+            padding: 7px 16px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-c:hover {
+            background: var(--cyan);
+            color: var(--bg-0);
+            box-shadow: 0 0 12px rgba(34, 211, 238, .2);
+        }
+
+        .btn-c.sm {
+            padding: 4px 9px;
+            font-size: .63rem;
+        }
+
+        .btn-c.red {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .btn-c.red:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .btn-c.grn {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .btn-c.grn:hover {
+            background: var(--green);
+            color: var(--bg-0);
+        }
+
+        .btn-c.amb {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .btn-c.amb:hover {
+            background: var(--amber);
+            color: var(--bg-0);
+        }
+
+        /* Forms */
+        .f-ctrl {
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            color: var(--t1);
+            font-family: var(--mono);
+            font-size: .78rem;
+            padding: 7px 11px;
+            border-radius: 2px;
+            transition: border-color .2s;
+            width: 100%;
+        }
+
+        .f-ctrl:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(34, 211, 238, .1);
+            background: var(--bg-1);
+            color: var(--t1);
+        }
+
+        .f-ctrl::placeholder {
+            color: var(--t3);
+        }
+
+        select.f-ctrl {
+            appearance: auto;
+        }
+
+        select.f-ctrl option {
+            background: var(--bg-2);
+            color: var(--t1);
+        }
+
+        .f-lbl {
+            font-family: var(--mono);
+            font-size: .63rem;
+            color: var(--t3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        /* Badges */
+        .bx {
+            font-family: var(--mono);
+            font-size: .6rem;
+            padding: 2px 7px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .bx-green {
+            background: rgba(16, 185, 129, .12);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, .28);
+        }
+
+        .bx-red {
+            background: rgba(239, 68, 68, .12);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .28);
+        }
+
+        .bx-cyan {
+            background: rgba(34, 211, 238, .1);
+            color: var(--cyan);
+            border: 1px solid rgba(34, 211, 238, .25);
+        }
+
+        .bx-amber {
+            background: rgba(245, 158, 11, .12);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .28);
+        }
+
+        .bx-blue {
+            background: rgba(59, 130, 246, .12);
+            color: var(--blue);
+            border: 1px solid rgba(59, 130, 246, .28);
+        }
+
+        .bx-purple {
+            background: rgba(167, 139, 250, .12);
+            color: var(--purple);
+            border: 1px solid rgba(167, 139, 250, .28);
+        }
+
+        /* Progress */
+        .prog {
+            height: 5px;
+            background: var(--bg-1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .prog-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .4s ease;
+        }
+
+        .prog-bar.cyan {
+            background: linear-gradient(90deg, var(--cyan), var(--blue));
+        }
+
+        .prog-bar.grn {
+            background: linear-gradient(90deg, var(--green), #34d399);
+        }
+
+        /* Empty */
+        .empty {
+            text-align: center;
+            padding: 36px 16px;
+            color: var(--t3);
+            font-family: var(--mono);
+            font-size: .78rem;
+        }
+
+        .empty i {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 10px;
+            opacity: .25;
+        }
+
+        /* Result Panel */
+        .res-panel {
+            background: var(--bg-1);
+            border: 1px solid var(--green);
+            border-radius: 4px;
+            padding: 18px;
+            margin-top: 14px;
+            display: none;
+        }
+
+        .res-panel.err {
+            border-color: var(--red);
+        }
+
+        .res-hdr {
+            font-family: var(--mono);
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .res-hdr.ok {
+            color: var(--green);
+        }
+
+        .res-hdr.fail {
+            color: var(--red);
+        }
+
+        .res-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed rgba(28, 40, 64, .5);
+            font-size: .78rem;
+        }
+
+        .res-k {
+            color: var(--t3);
+            font-family: var(--mono);
+            font-size: .68rem;
+            text-transform: uppercase;
+        }
+
+        .res-v {
+            color: var(--t1);
+            font-family: var(--mono);
+            font-weight: 600;
+        }
+
+        /* Toast */
+        .toast-box {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .toast-msg {
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px 16px;
+            font-family: var(--mono);
+            font-size: .75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 260px;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .45);
+            animation: tslide .25s ease;
+        }
+
+        .toast-msg.ok {
+            border-left: 3px solid var(--green);
+        }
+
+        .toast-msg.err {
+            border-left: 3px solid var(--red);
+        }
+
+        .toast-msg.inf {
+            border-left: 3px solid var(--cyan);
+        }
+
+        @keyframes tslide {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Modal overrides */
+        .modal-content {
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .modal-header {
+            border-bottom: 1px dashed var(--border-d);
+            padding: 14px 18px;
+        }
+
+        .modal-title {
+            font-family: var(--mono);
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            padding: 18px;
+        }
+
+        .modal-footer {
+            border-top: 1px dashed var(--border-d);
+            padding: 10px 18px;
+        }
+
+        .btn-close {
+            filter: invert(1);
+            opacity: .4;
+        }
+
+        /* Locker grid */
+        .lgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .lcell {
+            background: var(--bg-1);
+            border: 1px dashed var(--border-d);
+            border-radius: 3px;
+            padding: 10px 8px;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: .72rem;
+        }
+
+        .lcell.av {
+            border-color: rgba(16, 185, 129, .35);
+        }
+
+        .lcell.oc {
+            border-color: rgba(239, 68, 68, .35);
+        }
+
+        .ldot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .lcell.av .ldot {
+            background: var(--green);
+            box-shadow: 0 0 5px var(--green);
+        }
+
+        .lcell.oc .ldot {
+            background: var(--red);
+            box-shadow: 0 0 5px var(--red);
+        }
+
+        .lcode {
+            font-weight: 600;
+            color: var(--t1);
+            margin-bottom: 2px;
+        }
+
+        .lstatus {
+            font-size: .6rem;
+            color: var(--t3);
+        }
+
+        /* Section visibility */
+        .sec {
+            display: none;
+        }
+
+        .sec.on {
+            display: block;
+        }
+
+        /* Chart */
+        .chart-box {
+            position: relative;
+            max-height: 280px;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .s-toggle {
+                display: flex;
+            }
+
+            .s-overlay.open {
+                display: block;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .top-bar h2 {
+                margin-left: 42px;
+                font-size: .6rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page {
+                padding: 14px;
+            }
+
+            .kpi-val {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Toast container -->
+    <div class="toast-box" id="toasts"></div>
+
+    <!-- Mobile toggle -->
+    <button class="s-toggle" id="sToggle" onclick="togSidebar()"><i class="bi bi-list"></i></button>
+    <div class="s-overlay" id="sOverlay" onclick="togSidebar()"></div>
+
+    <!-- ████████  SIDEBAR  ████████ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="s-brand">
+            <h1>DRONE<br>LOCKER NETWORK<small>Control Center v1.0</small></h1>
+        </div>
+        <nav class="s-nav">
+            <div class="s-nav-item active" data-sec="dashboard" onclick="go('dashboard')"> <i
+                    class="bi bi-grid-1x2"></i>Dashboard</div>
+            <div class="s-nav-item" data-sec="pads" onclick="go('pads')"> <i class="bi bi-airplane"></i>Landing Pads
+            </div>
+            <div class="s-nav-item" data-sec="bays" onclick="go('bays')"> <i class="bi bi-box-seam"></i>Locker Bays
+            </div>
+            <div class="s-nav-item" data-sec="couriers" onclick="go('couriers')"> <i class="bi bi-truck"></i>Courier
+                Services</div>
+            <div class="s-nav-item" data-sec="packages" onclick="go('packages')"> <i class="bi bi-archive"></i>Packages
+            </div>
+            <div class="s-nav-item" data-sec="landings" onclick="go('landings')"> <i
+                    class="bi bi-arrow-down-circle"></i>Drone Landings</div>
+            <div class="s-nav-item" data-sec="invoices" onclick="go('invoices')"> <i class="bi bi-receipt"></i>Invoices
+            </div>
+            <div class="s-nav-item" data-sec="payments" onclick="go('payments')"> <i
+                    class="bi bi-credit-card"></i>Payments</div>
+            <div class="s-nav-item" data-sec="reports" onclick="go('reports')"> <i
+                    class="bi bi-bar-chart-line"></i>Reports</div>
+        </nav>
+        <div class="s-footer">
+            <div class="lbl">System Status</div>
+            <div class="status-line">
+                <span class="dot" id="sDot"></span>
+                <span id="sTxt" style="color:var(--green)">Checking…</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ████████  MAIN  ████████ -->
+    <div class="main">
+        <div class="top-bar">
+            <h2>Automated Urban Drone Delivery Landing Pad &amp; Package Locker Network</h2>
+            <div class="top-actions">
+                <span class="top-date" id="clock"></span>
+                <button class="btn-c sm" onclick="refreshAll()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+        </div>
+
+        <div class="page">
+
+            <!-- ══════════ DASHBOARD ══════════ -->
+            <div class="sec on" id="sec-dashboard">
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="kpi">
+                            <div class="kpi-ico" style="color:var(--cyan)"><i class="bi bi-airplane"></i></div>
+                            <div class="kpi-val" id="k1">0</div>
+                            <div class="kpi-lbl">Landing Pads</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="kpi">
+                            <div class="kpi-ico" style="color:var(--green)"><i class="bi bi-box-seam"></i></div>
+                            <div class="kpi-val" id="k2">0</div>
+                            <div class="kpi-lbl">Available Bays</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="kpi">
+                            <div class="kpi-ico" style="color:var(--amber)"><i class="bi bi-archive"></i></div>
+                            <div class="kpi-val" id="k3">0</div>
+                            <div class="kpi-lbl">Active Packages</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="kpi">
+                            <div class="kpi-ico" style="color:var(--blue)"><i class="bi bi-arrow-down-circle"></i></div>
+                            <div class="kpi-val" id="k4">0</div>
+                            <div class="kpi-lbl">Today's Landings</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="kpi">
+                            <div class="kpi-ico" style="color:var(--red)"><i class="bi bi-receipt"></i></div>
+                            <div class="kpi-val" id="k5">0</div>
+                            <div class="kpi-lbl">Pending Invoices</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="kpi">
+                            <div class="kpi-ico" style="color:var(--purple)"><i class="bi bi-currency-rupee"></i></div>
+                            <div class="kpi-val" id="k6">₹0</div>
+                            <div class="kpi-lbl">Total Revenue</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network overview -->
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-diagram-3"></i>Network Overview</div>
+                    <div class="row g-3 text-center">
+                        <div class="col-md-4 col-lg-2">
+                            <div class="lbl-sm">Total Pads</div>
+                            <div class="ov-val c-cyan" id="n1">0</div>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <div class="lbl-sm">Total Bays</div>
+                            <div class="ov-val" style="color:var(--blue)" id="n2">0</div>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <div class="lbl-sm">Available</div>
+                            <div class="ov-val" style="color:var(--green)" id="n3">0</div>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <div class="lbl-sm">Occupied</div>
+                            <div class="ov-val" style="color:var(--red)" id="n4">0</div>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <div class="lbl-sm">Active Pkgs</div>
+                            <div class="ov-val" style="color:var(--amber)" id="n5">0</div>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <div class="lbl-sm">Picked Up</div>
+                            <div class="ov-val" style="color:var(--purple)" id="n6">0</div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <div class="lbl-sm mb-1">Bay Occupancy</div>
+                            <div class="prog">
+                                <div class="prog-bar cyan" id="pOcc" style="width:0"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="lbl-sm mb-1">Delivery Completion</div>
+                            <div class="prog">
+                                <div class="prog-bar grn" id="pDel" style="width:0"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent landings -->
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-activity"></i>Recent Drone Activity</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Landing Code</th>
+                                    <th>Drone</th>
+                                    <th>Package</th>
+                                    <th>Pad</th>
+                                    <th>Bay</th>
+                                    <th>Status</th>
+                                    <th>Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dLand"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Recent packages -->
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-archive"></i>Recent Packages</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Recipient</th>
+                                    <th>Status</th>
+                                    <th>Bay</th>
+                                    <th>Storage Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dPkg"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ LANDING PADS ══════════ -->
+            <div class="sec" id="sec-pads">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="sec-title"><i class="bi bi-airplane"></i> Landing Pad Management</h5>
+                    <button class="btn-c sm" onclick="mOpen('mPad')"><i class="bi bi-plus"></i> Add Pad</button>
+                </div>
+                <div class="card-t">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Code</th>
+                                    <th>Location</th>
+                                    <th>Total</th>
+                                    <th>Avail</th>
+                                    <th>Tariff</th>
+                                    <th>Active</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tPads"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ LOCKER BAYS ══════════ -->
+            <div class="sec" id="sec-bays">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="sec-title"><i class="bi bi-box-seam"></i> Locker Bay Management</h5>
+                    <button class="btn-c sm" onclick="bayFormReset();mOpen('mBay')"><i class="bi bi-plus"></i> Add
+                        Bay</button>
+                </div>
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-grid-3x3-gap"></i>Locker Grid</div>
+                    <div class="lgrid" id="bayGrid"></div>
+                </div>
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-table"></i>Bay Directory</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Code</th>
+                                    <th>Status</th>
+                                    <th>Package</th>
+                                    <th>Pad ID</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tBays"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ COURIER SERVICES ══════════ -->
+            <div class="sec" id="sec-couriers">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="sec-title"><i class="bi bi-truck"></i> Courier Service Management</h5>
+                    <button class="btn-c sm" onclick="courierFormReset();mOpen('mCourier')"><i class="bi bi-plus"></i>
+                        Add Courier</button>
+                </div>
+                <div class="card-t">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Code</th>
+                                    <th>Company</th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Active</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tCouriers"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ PACKAGES ══════════ -->
+            <div class="sec" id="sec-packages">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="sec-title"><i class="bi bi-archive"></i> Package Management</h5>
+                    <button class="btn-c sm" onclick="mOpen('mPkg')"><i class="bi bi-plus"></i> Register
+                        Package</button>
+                </div>
+                <div class="card-t">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Recipient</th>
+                                    <th>Status</th>
+                                    <th>Pad</th>
+                                    <th>Bay</th>
+                                    <th>Passcode</th>
+                                    <th>Fee</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tPkgs"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ DRONE LANDINGS ══════════ -->
+            <div class="sec" id="sec-landings">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="sec-title"><i class="bi bi-arrow-down-circle"></i> Drone Landings</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn-c sm" onclick="mOpen('mLand')"><i class="bi bi-lightning"></i> Process
+                            Landing</button>
+                        <button class="btn-c sm grn" onclick="mOpen('mPickup')"><i class="bi bi-hand-index"></i> Package
+                            Pickup</button>
+                    </div>
+                </div>
+                <div class="res-panel" id="rLand">
+                    <div class="res-hdr ok" id="rLandH"><i class="bi bi-check-circle-fill"></i><span></span></div>
+                    <div id="rLandB"></div>
+                </div>
+                <div class="res-panel" id="rPickup">
+                    <div class="res-hdr ok" id="rPickupH"><i class="bi bi-check-circle-fill"></i><span></span></div>
+                    <div id="rPickupB"></div>
+                </div>
+                <div class="card-t mt-3">
+                    <div class="card-hdr"><i class="bi bi-list-ul"></i>All Landings</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Landing Code</th>
+                                    <th>Drone</th>
+                                    <th>Package</th>
+                                    <th>Pad</th>
+                                    <th>Bay</th>
+                                    <th>Arrival</th>
+                                    <th>Fee</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tLandings"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ INVOICES ══════════ -->
+            <div class="sec" id="sec-invoices">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="sec-title"><i class="bi bi-receipt"></i> Invoice Management</h5>
+                    <button class="btn-c sm" onclick="mOpen('mInv')"><i class="bi bi-plus"></i> Create Invoice</button>
+                </div>
+                <div class="card-t">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Customer</th>
+                                    <th>Package</th>
+                                    <th>Landing Fee</th>
+                                    <th>Storage Fee</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Due</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tInv"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ PAYMENTS ══════════ -->
+            <div class="sec" id="sec-payments">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="sec-title"><i class="bi bi-credit-card"></i> Payment Management</h5>
+                    <button class="btn-c sm" onclick="mOpen('mPay')"><i class="bi bi-plus"></i> Record Payment</button>
+                </div>
+                <div class="card-t">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Invoice ID</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tPay"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ REPORTS ══════════ -->
+            <div class="sec" id="sec-reports">
+                <h5 class="sec-title mb-3"><i class="bi bi-bar-chart-line"></i> Reports &amp; Analytics</h5>
+
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-graph-up-arrow"></i>Profit &amp; Loss</div>
+                    <div class="row g-3 text-center">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="lbl-sm">Landing Revenue</div>
+                            <div class="ov-val" style="color:var(--green)" id="r1">₹0</div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="lbl-sm">Storage Revenue</div>
+                            <div class="ov-val" style="color:var(--green)" id="r2">₹0</div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="lbl-sm">Total Revenue</div>
+                            <div class="ov-val c-cyan" id="r3">₹0</div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="lbl-sm">Total Expenses</div>
+                            <div class="ov-val" style="color:var(--red)" id="r4">₹0</div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <div class="lbl-sm">Net Profit / Loss</div>
+                        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700" id="r5">₹0</div>
+                    </div>
+                </div>
+
+                <div class="card-t">
+                    <div class="card-hdr"><i class="bi bi-truck"></i>Delivery Report</div>
+                    <div class="row g-3 text-center">
+                        <div class="col-6 col-md-3">
+                            <div class="lbl-sm">Total Landings</div>
+                            <div class="ov-val c-cyan" id="r6">0</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="lbl-sm">Delivered</div>
+                            <div class="ov-val" style="color:var(--green)" id="r7">0</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="lbl-sm">Active Pkgs</div>
+                            <div class="ov-val" style="color:var(--amber)" id="r8">0</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="lbl-sm">Picked Up</div>
+                            <div class="ov-val" style="color:var(--purple)" id="r9">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card-t">
+                            <div class="card-hdr"><i class="bi bi-pie-chart"></i>Locker Occupancy</div>
+                            <div class="chart-box"><canvas id="chOcc"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-t">
+                            <div class="card-hdr"><i class="bi bi-bar-chart"></i>Delivery Status</div>
+                            <div class="chart-box"><canvas id="chDel"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /page -->
+    </div><!-- /main -->
+
+
+    <!-- ████████████████████████████████████████████████████████████ -->
+    <!--  MODALS                                                      -->
+    <!-- ████████████████████████████████████████████████████████████ -->
+
+    <!-- Add Pad -->
+    <div class="modal fade" id="mPad" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-airplane"></i> Add Landing Pad</h5><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="f-lbl">Pad Code</label><input class="f-ctrl" id="fPadCode"
+                            placeholder="LP001"></div>
+                    <div class="mb-2"><label class="f-lbl">Location</label><input class="f-ctrl" id="fPadLoc"
+                            placeholder="Zone A - Block 1"></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-2"><label class="f-lbl">Total Bays</label><input type="number"
+                                class="f-ctrl" id="fPadTotal" value="0"></div>
+                        <div class="col-6 mb-2"><label class="f-lbl">Available Bays</label><input type="number"
+                                class="f-ctrl" id="fPadAvail" value="0"></div>
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Landing Tariff (₹)</label><input type="number" step="0.01"
+                            class="f-ctrl" id="fPadTariff" value="0"></div>
+                    <div class="form-check mt-2"><input type="checkbox" class="form-check-input" id="fPadActive"
+                            checked><label class="form-check-label f-lbl" for="fPadActive">Active</label></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn-c sm" onclick="padCreate()">Add Pad</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Pad -->
+    <div class="modal fade" id="mPadView" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-airplane"></i> Pad Details</h5><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="padViewBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Bay -->
+    <div class="modal fade" id="mBay" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mBayTitle"><i class="bi bi-box-seam"></i> Add Bay</h5><button
+                        class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="fBayId">
+                    <div class="mb-2"><label class="f-lbl">Bay Code</label><input class="f-ctrl" id="fBayCode"
+                            placeholder="B01"></div>
+                    <div class="mb-2"><label class="f-lbl">Status</label><select class="f-ctrl" id="fBayStat">
+                            <option>AVAILABLE</option>
+                            <option>OCCUPIED</option>
+                        </select></div>
+                    <div class="mb-2"><label class="f-lbl">Package Code</label><input class="f-ctrl" id="fBayPkg"
+                            placeholder="(optional)"></div>
+                    <div class="mb-2"><label class="f-lbl">Locker Pad ID</label><input type="number" class="f-ctrl"
+                            id="fBayPad" placeholder="1"></div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm" onclick="baySave()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Courier -->
+    <div class="modal fade" id="mCourier" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mCourierTitle"><i class="bi bi-truck"></i> Add Courier</h5><button
+                        class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="fCourierId">
+                    <div class="mb-2"><label class="f-lbl">Service Code</label><input class="f-ctrl" id="fCCode"
+                            placeholder="CS001"></div>
+                    <div class="mb-2"><label class="f-lbl">Company Name</label><input class="f-ctrl" id="fCCompany">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Contact Person</label><input class="f-ctrl" id="fCContact">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Email</label><input type="email" class="f-ctrl" id="fCEmail">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Phone</label><input class="f-ctrl" id="fCPhone"></div>
+                    <div class="mb-2"><label class="f-lbl">Address</label><input class="f-ctrl" id="fCAddr"></div>
+                    <div class="form-check mt-2"><input type="checkbox" class="form-check-input" id="fCActive"
+                            checked><label class="form-check-label f-lbl" for="fCActive">Active</label></div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm" onclick="courierSave()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Package -->
+    <div class="modal fade" id="mPkg" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-archive"></i> Register Package</h5><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="f-lbl">Package Code</label><input class="f-ctrl" id="fPkgCode"
+                            placeholder="PKG001"></div>
+                    <div class="mb-2"><label class="f-lbl">Recipient Name</label><input class="f-ctrl" id="fPkgName">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Recipient Phone</label><input class="f-ctrl" id="fPkgPhone">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Recipient Email</label><input type="email" class="f-ctrl"
+                            id="fPkgEmail"></div>
+                    <div class="mb-2"><label class="f-lbl">Delivery Address</label><input class="f-ctrl" id="fPkgAddr">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Courier Service ID</label><input type="number" class="f-ctrl"
+                            id="fPkgCourier" placeholder="1"></div>
+                    <div class="mb-2"><label class="f-lbl">Locker Pad ID</label><input type="number" class="f-ctrl"
+                            id="fPkgPad" placeholder="1"></div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm" onclick="pkgCreate()">Register</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Landing -->
+    <div class="modal fade" id="mLand" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-lightning"></i> Process Drone Landing</h5><button
+                        class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="f-lbl">Drone Code</label><input class="f-ctrl" id="fLndDrone"
+                            placeholder="DRONE-01"></div>
+                    <div class="mb-2"><label class="f-lbl">Package Code</label><input class="f-ctrl" id="fLndPkg"
+                            placeholder="PKG001"></div>
+                    <div class="mb-2"><label class="f-lbl">Locker Pad ID</label><input type="number" class="f-ctrl"
+                            id="fLndPad" placeholder="1"></div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm" onclick="landProcess()">Process Landing</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pickup -->
+    <div class="modal fade" id="mPickup" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-hand-index"></i> Package Pickup</h5><button
+                        class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="f-lbl">Package Code</label><input class="f-ctrl" id="fPickCode"
+                            placeholder="PKG001"></div>
+                    <div class="mb-2"><label class="f-lbl">Pickup Passcode</label><input class="f-ctrl" id="fPickPass"
+                            placeholder="******"></div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm grn" onclick="pickupExec()">Verify &amp; Pickup</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Invoice -->
+    <div class="modal fade" id="mInv" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-receipt"></i> Create Invoice</h5><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="f-lbl">Invoice Number</label><input class="f-ctrl" id="fInvNum"
+                            placeholder="INV001"></div>
+                    <div class="mb-2"><label class="f-lbl">Customer Name</label><input class="f-ctrl" id="fInvCust">
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Courier Service ID</label><input type="number" class="f-ctrl"
+                            id="fInvCourier"></div>
+                    <div class="mb-2"><label class="f-lbl">Package Code</label><input class="f-ctrl" id="fInvPkg"></div>
+                    <div class="row g-2">
+                        <div class="col-4 mb-2"><label class="f-lbl">Landing Fee</label><input type="number" step=".01"
+                                class="f-ctrl" id="fInvLF" value="0"></div>
+                        <div class="col-4 mb-2"><label class="f-lbl">Storage Fee</label><input type="number" step=".01"
+                                class="f-ctrl" id="fInvSF" value="0"></div>
+                        <div class="col-4 mb-2"><label class="f-lbl">Total</label><input type="number" step=".01"
+                                class="f-ctrl" id="fInvTotal" value="0"></div>
+                    </div>
+                    <div class="mb-2"><label class="f-lbl">Status</label><select class="f-ctrl" id="fInvStat">
+                            <option>UNPAID</option>
+                            <option>PAID</option>
+                            <option>CANCELLED</option>
+                        </select></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-2"><label class="f-lbl">Invoice Date</label><input type="datetime-local"
+                                class="f-ctrl" id="fInvDate"></div>
+                        <div class="col-6 mb-2"><label class="f-lbl">Due Date</label><input type="datetime-local"
+                                class="f-ctrl" id="fInvDue"></div>
+                    </div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm" onclick="invCreate()">Create</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Record Payment -->
+    <div class="modal fade" id="mPay" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-credit-card"></i> Record Payment</h5><button
+                        class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="f-lbl">Payment Reference</label><input class="f-ctrl" id="fPayRef"
+                            placeholder="PAY001"></div>
+                    <div class="mb-2"><label class="f-lbl">Invoice ID</label><input type="number" class="f-ctrl"
+                            id="fPayInv"></div>
+                    <div class="mb-2"><label class="f-lbl">Amount (₹)</label><input type="number" step=".01"
+                            class="f-ctrl" id="fPayAmt" value="0"></div>
+                    <div class="mb-2"><label class="f-lbl">Payment Method</label><select class="f-ctrl" id="fPayMethod">
+                            <option>BANK_TRANSFER</option>
+                            <option>CASH</option>
+                            <option>UPI</option>
+                        </select></div>
+                    <div class="mb-2"><label class="f-lbl">Status</label><select class="f-ctrl" id="fPayStat">
+                            <option>SUCCESS</option>
+                            <option>PENDING</option>
+                            <option>FAILED</option>
+                        </select></div>
+                </div>
+                <div class="modal-footer"><button class="btn-c sm red" data-bs-dismiss="modal">Cancel</button><button
+                        class="btn-c sm" onclick="payCreate()">Record</button></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .sec-title {
+            font-family: var(--mono);
+            color: var(--cyan);
+            font-size: .95rem;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .lbl-sm {
+            font-size: .6rem;
+            color: var(--t3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ov-val {
+            font-family: var(--mono);
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <script>
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  API CONFIGURATION                                          */
+        /* ═══════════════════════════════════════════════════════════ */
+        const API = '';
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  REUSABLE API REQUEST                                       */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function api(url, opts = {}) {
+            const cfg = { headers: { 'Content-Type': 'application/json', ...opts.headers }, ...opts };
+            if (cfg.body && typeof cfg.body === 'object' && !(cfg.body instanceof FormData))
+                cfg.body = JSON.stringify(cfg.body);
+            try {
+                const r = await fetch(API + url, cfg);
+                if (!r.ok) {
+                    let msg = `HTTP ${r.status}`;
+                    try { const t = await r.text(); if (t) msg += ': ' + t; } catch (_) { }
+                    throw new Error(msg);
+                }
+                const txt = await r.text();
+                if (!txt) return null;
+                try { return JSON.parse(txt); } catch (_) { return txt; }
+            } catch (e) {
+                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+                    toast('Unable to connect to backend.', 'err');
+                else toast(e.message, 'err');
+                throw e;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  TOAST NOTIFICATIONS                                        */
+        /* ═══════════════════════════════════════════════════════════ */
+        function toast(msg, type = 'inf') {
+            const box = document.getElementById('toasts');
+            const el = document.createElement('div');
+            const icons = { ok: 'bi-check-circle-fill', err: 'bi-x-circle-fill', inf: 'bi-info-circle-fill' };
+            const cols = { ok: 'var(--green)', err: 'var(--red)', inf: 'var(--cyan)' };
+            el.className = 'toast-msg ' + type;
+            el.innerHTML = `<i class="bi ${icons[type]}" style="color:${cols[type]};font-size:.95rem"></i><span>${msg}</span>`;
+            box.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .25s'; setTimeout(() => el.remove(), 300); }, 4000);
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  NAVIGATION                                                 */
+        /* ═══════════════════════════════════════════════════════════ */
+        const loaders = {
+            dashboard: loadDash, pads: loadPads, bays: loadBays,
+            couriers: loadCouriers, packages: loadPkgs, landings: loadLandings,
+            invoices: loadInv, payments: loadPay, reports: loadReports
+        };
+
+        function go(id) {
+            document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+            document.querySelectorAll('.s-nav-item').forEach(n => n.classList.remove('active'));
+            const sec = document.getElementById('sec-' + id);
+            if (sec) sec.classList.add('on');
+            const nav = document.querySelector(`.s-nav-item[data-sec="${id}"]`);
+            if (nav) nav.classList.add('active');
+            if (loaders[id]) loaders[id]();
+            if (window.innerWidth <= 992) { sidebar.classList.remove('open'); sOverlay.classList.remove('open'); }
+        }
+
+        function togSidebar() { sidebar.classList.toggle('open'); sOverlay.classList.toggle('open'); }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  MODAL HELPERS                                              */
+        /* ═══════════════════════════════════════════════════════════ */
+        function mOpen(id) { new bootstrap.Modal(document.getElementById(id)).show(); }
+        function mClose(id) { const m = bootstrap.Modal.getInstance(document.getElementById(id)); if (m) m.hide(); }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  UTILITIES                                                  */
+        /* ═══════════════════════════════════════════════════════════ */
+        const $ = id => document.getElementById(id);
+        const V = id => $(id).value;
+        const fmtD = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+        const fmtDT = d => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+        const rup = v => '₹' + (parseFloat(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+        function badge(s) {
+            if (!s) return '<span class="bx bx-cyan">—</span>';
+            const m = {
+                AVAILABLE: 'bx-green', OCCUPIED: 'bx-red', ACTIVE: 'bx-cyan',
+                REGISTERED: 'bx-blue', IN_TRANSIT: 'bx-amber', DELIVERED_TO_LOCKER: 'bx-green',
+                PICKED_UP: 'bx-purple', CANCELLED: 'bx-red', UNPAID: 'bx-amber', PAID: 'bx-green',
+                LANDED: 'bx-cyan', COMPLETED: 'bx-green', CREATED: 'bx-blue', RECEIVED: 'bx-purple',
+                SUCCESS: 'bx-green', PENDING: 'bx-amber', FAILED: 'bx-red'
+            };
+            return `<span class="bx ${m[s] || 'bx-cyan'}">${s}</span>`;
+        }
+
+        function emptyR(n, msg) {
+            return `<tr><td colspan="${n}" class="empty"><i class="bi bi-inbox"></i>${msg}</td></tr>`;
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  BACKEND STATUS                                             */
+        /* ═══════════════════════════════════════════════════════════ */
+        let online = false;
+        async function checkStatus() {
+            try {
+                await api('/api/lockers/pads'); online = true;
+                $('sDot').classList.remove('off');
+                $('sTxt').textContent = 'BACKEND CONNECTED';
+                $('sTxt').style.color = 'var(--green)';
+            } catch {
+                online = false;
+                $('sDot').classList.add('off');
+                $('sTxt').textContent = 'BACKEND OFFLINE';
+                $('sTxt').style.color = 'var(--red)';
+            }
+        }
+
+        /* Clock */
+        function tick() {
+            const d = new Date();
+            $('clock').textContent = d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                + '  ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  GLOBAL DATA                                                */
+        /* ═══════════════════════════════════════════════════════════ */
+        let D = { pads: [], bays: [], couriers: [], pkgs: [], landings: [], invoices: [], payments: [], ledger: [] };
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  REFRESH ALL                                                */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function refreshAll() {
+            toast('Refreshing data…', 'inf');
+            await checkStatus();
+            if (!online) return;
+            const r = await Promise.allSettled([
+                api('/api/lockers/pads'), api('/api/lockers/bays'), api('/api/courier-services'),
+                api('/api/packages'), api('/api/lockers/landings'), api('/api/invoices'),
+                api('/api/payments'), api('/api/ledger')
+            ]);
+            const keys = ['pads', 'bays', 'couriers', 'pkgs', 'landings', 'invoices', 'payments', 'ledger'];
+            keys.forEach((k, i) => { if (r[i].status === 'fulfilled') D[k] = r[i].value || []; });
+            const cur = document.querySelector('.s-nav-item.active');
+            if (cur) go(cur.dataset.sec);
+            toast('Data refreshed.', 'ok');
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  DASHBOARD                                                  */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadDash() {
+            try {
+                const [a, b, c, d, e, f] = await Promise.all([
+                    api('/api/lockers/pads'), api('/api/lockers/bays'), api('/api/packages'),
+                    api('/api/lockers/landings'), api('/api/invoices'), api('/api/payments')
+                ]);
+                D.pads = a || []; D.bays = b || []; D.pkgs = c || []; D.landings = d || []; D.invoices = e || []; D.payments = f || [];
+            } catch { }
+
+            const avail = D.bays.filter(b => b.status === 'AVAILABLE').length;
+            const occ = D.bays.filter(b => b.status === 'OCCUPIED').length;
+            const active = D.pkgs.filter(p => p.status && !['PICKED_UP', 'CANCELLED'].includes(p.status)).length;
+            const picked = D.pkgs.filter(p => p.status === 'PICKED_UP').length;
+            const today = new Date().toISOString().slice(0, 10);
+            const tLand = D.landings.filter(l => l.arrivalTime && l.arrivalTime.slice(0, 10) === today).length;
+            const unpaid = D.invoices.filter(i => i.status === 'UNPAID').length;
+            const rev = D.payments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + (p.amount || 0), 0);
+
+            $('k1').textContent = D.pads.length; $('k2').textContent = avail;
+            $('k3').textContent = active; $('k4').textContent = tLand;
+            $('k5').textContent = unpaid; $('k6').textContent = rup(rev);
+
+            $('n1').textContent = D.pads.length; $('n2').textContent = D.bays.length;
+            $('n3').textContent = avail; $('n4').textContent = occ;
+            $('n5').textContent = active; $('n6').textContent = picked;
+
+            const tb = D.bays.length || 1;
+            $('pOcc').style.width = Math.round(occ / tb * 100) + '%';
+            const tp = D.pkgs.length || 1;
+            $('pDel').style.width = Math.round(picked / tp * 100) + '%';
+
+            // Recent landings
+            const rl = [...D.landings].reverse().slice(0, 10);
+            $('dLand').innerHTML = rl.length ? rl.map(l => `<tr>
+        <td class="mono c-cyan">${l.landingCode || '—'}</td><td>${l.droneCode || '—'}</td>
+        <td>${l.packageCode || '—'}</td><td>${l.lockerPadId || '—'}</td><td>${l.lockerBayId || '—'}</td>
+        <td>${badge(l.status)}</td><td>${rup(l.landingFee)}</td></tr>`).join('') : emptyR(7, 'No drone landings recorded.');
+
+            // Recent packages
+            const rp = [...D.pkgs].reverse().slice(0, 10);
+            $('dPkg').innerHTML = rp.length ? rp.map(p => `<tr>
+        <td class="mono c-cyan">${p.packageCode || '—'}</td><td>${p.recipientName || '—'}</td>
+        <td>${badge(p.status)}</td><td>${p.lockerBayId || '—'}</td><td>${rup(p.storageFee)}</td></tr>`).join('') : emptyR(5, 'No packages found.');
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  LANDING PADS                                               */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadPads() {
+            try { D.pads = await api('/api/lockers/pads') || []; } catch { return; }
+            $('tPads').innerHTML = D.pads.length ? D.pads.map(p => `<tr>
+        <td>${p.id}</td><td class="mono c-cyan">${p.padCode || ''}</td><td>${p.location || ''}</td>
+        <td>${p.totalBays}</td><td>${p.availableBays}</td><td>${rup(p.landingTariff)}</td>
+        <td>${p.active ? badge('ACTIVE') : badge('CANCELLED')}</td>
+        <td><button class="btn-c sm me-1" onclick="padView(${p.id})"><i class="bi bi-eye"></i></button><button class="btn-c sm red" onclick="padDel(${p.id})"><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('') : emptyR(8, 'No landing pads found.');
+        }
+
+        async function padCreate() {
+            const d = {
+                padCode: V('fPadCode'), location: V('fPadLoc'), totalBays: +V('fPadTotal') || 0,
+                availableBays: +V('fPadAvail') || 0, landingTariff: +V('fPadTariff') || 0, active: $('fPadActive').checked
+            };
+            try {
+                await api('/api/lockers/pads', { method: 'POST', body: d }); toast('Pad created.', 'ok'); mClose('mPad');
+                ['fPadCode', 'fPadLoc'].forEach(i => $(i).value = ''); $('fPadTotal').value = $('fPadAvail').value = $('fPadTariff').value = '0';
+                loadPads();
+            } catch { }
+        }
+
+        async function padView(id) {
+            try {
+                const p = await api('/api/lockers/pads/' + id); if (!p) return;
+                $('padViewBody').innerHTML = [['ID', p.id], ['Pad Code', p.padCode], ['Location', p.location],
+                ['Total Bays', p.totalBays], ['Available', p.availableBays], ['Tariff', rup(p.landingTariff)],
+                ['Active', p.active ? 'Yes' : 'No']].map(([k, v]) => `<div class="res-row"><span class="res-k">${k}</span><span class="res-v">${v}</span></div>`).join('');
+                mOpen('mPadView');
+            } catch { }
+        }
+
+        async function padDel(id) {
+            if (!confirm('Delete this pad?')) return;
+            try { await api('/api/lockers/pads/' + id, { method: 'DELETE' }); toast('Pad deleted.', 'ok'); loadPads(); } catch { }
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  LOCKER BAYS                                                */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadBays() {
+            try { D.bays = await api('/api/lockers/bays') || []; } catch { return; }
+            // Grid
+            $('bayGrid').innerHTML = D.bays.length ? D.bays.map(b => {
+                const c = b.status === 'AVAILABLE' ? 'av' : 'oc';
+                return `<div class="lcell ${c}"><div class="lcode"><span class="ldot"></span>${b.bayCode || '—'}</div>
+        <div class="lstatus">${b.status || '—'}</div>${b.packageCode ? `<div style="font-size:.55rem;color:var(--t3);margin-top:2px">${b.packageCode}</div>` : ''}</div>`;
+            }).join('') : '<div class="empty"><i class="bi bi-inbox"></i>No bays found.</div>';
+
+            // Table
+            $('tBays').innerHTML = D.bays.length ? D.bays.map(b => `<tr>
+        <td>${b.id}</td><td class="mono c-cyan">${b.bayCode || ''}</td><td>${badge(b.status)}</td>
+        <td>${b.packageCode || '—'}</td><td>${b.lockerPadId || '—'}</td>
+        <td><button class="btn-c sm amb me-1" onclick="bayEdit(${b.id})"><i class="bi bi-pencil"></i></button><button class="btn-c sm red" onclick="bayDel(${b.id})"><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('') : emptyR(6, 'No bays found.');
+        }
+
+        function bayFormReset() { $('fBayId').value = ''; $('fBayCode').value = ''; $('fBayStat').value = 'AVAILABLE'; $('fBayPkg').value = ''; $('fBayPad').value = ''; $('mBayTitle').innerHTML = '<i class="bi bi-box-seam"></i> Add Bay'; }
+        function bayEdit(id) {
+            const b = D.bays.find(x => x.id === id); if (!b) return;
+            $('fBayId').value = b.id; $('fBayCode').value = b.bayCode || ''; $('fBayStat').value = b.status || 'AVAILABLE';
+            $('fBayPkg').value = b.packageCode || ''; $('fBayPad').value = b.lockerPadId || '';
+            $('mBayTitle').innerHTML = '<i class="bi bi-box-seam"></i> Edit Bay'; mOpen('mBay');
+        }
+        async function baySave() {
+            const eid = $('fBayId').value;
+            const d = { bayCode: V('fBayCode'), status: V('fBayStat'), packageCode: V('fBayPkg') || null, lockerPadId: +V('fBayPad') || null };
+            try {
+                if (eid) { await api('/api/lockers/bays/' + eid, { method: 'PUT', body: d }); toast('Bay updated.', 'ok'); }
+                else { await api('/api/lockers/bays', { method: 'POST', body: d }); toast('Bay created.', 'ok'); }
+                mClose('mBay'); bayFormReset(); loadBays();
+            } catch { }
+        }
+        async function bayDel(id) { if (!confirm('Delete bay?')) return; try { await api('/api/lockers/bays/' + id, { method: 'DELETE' }); toast('Bay deleted.', 'ok'); loadBays(); } catch { } }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  COURIER SERVICES                                           */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadCouriers() {
+            try { D.couriers = await api('/api/courier-services') || []; } catch { return; }
+            $('tCouriers').innerHTML = D.couriers.length ? D.couriers.map(c => `<tr>
+        <td>${c.id}</td><td class="mono c-cyan">${c.serviceCode || ''}</td><td>${c.companyName || ''}</td>
+        <td>${c.contactPerson || '—'}</td><td>${c.email || '—'}</td><td>${c.phone || '—'}</td>
+        <td>${c.active ? badge('ACTIVE') : badge('CANCELLED')}</td>
+        <td><button class="btn-c sm amb me-1" onclick="courierEdit(${c.id})"><i class="bi bi-pencil"></i></button><button class="btn-c sm red" onclick="courierDel(${c.id})"><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('') : emptyR(8, 'No courier services found.');
+        }
+
+        function courierFormReset() { $('fCourierId').value = '';['fCCode', 'fCCompany', 'fCContact', 'fCEmail', 'fCPhone', 'fCAddr'].forEach(i => $(i).value = ''); $('fCActive').checked = true; $('mCourierTitle').innerHTML = '<i class="bi bi-truck"></i> Add Courier'; }
+        function courierEdit(id) {
+            const c = D.couriers.find(x => x.id === id); if (!c) return;
+            $('fCourierId').value = c.id; $('fCCode').value = c.serviceCode || ''; $('fCCompany').value = c.companyName || '';
+            $('fCContact').value = c.contactPerson || ''; $('fCEmail').value = c.email || ''; $('fCPhone').value = c.phone || '';
+            $('fCAddr').value = c.address || ''; $('fCActive').checked = c.active;
+            $('mCourierTitle').innerHTML = '<i class="bi bi-truck"></i> Edit Courier'; mOpen('mCourier');
+        }
+        async function courierSave() {
+            const eid = $('fCourierId').value;
+            const d = {
+                serviceCode: V('fCCode'), companyName: V('fCCompany'), contactPerson: V('fCContact'),
+                email: V('fCEmail'), phone: V('fCPhone'), address: V('fCAddr'), active: $('fCActive').checked
+            };
+            try {
+                if (eid) { await api('/api/courier-services/' + eid, { method: 'PUT', body: d }); toast('Courier updated.', 'ok'); }
+                else { await api('/api/courier-services', { method: 'POST', body: d }); toast('Courier created.', 'ok'); }
+                mClose('mCourier'); loadCouriers();
+            } catch { }
+        }
+        async function courierDel(id) { if (!confirm('Delete courier?')) return; try { await api('/api/courier-services/' + id, { method: 'DELETE' }); toast('Courier deleted.', 'ok'); loadCouriers(); } catch { } }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  PACKAGES                                                   */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadPkgs() {
+            try { D.pkgs = await api('/api/packages') || []; } catch { return; }
+            $('tPkgs').innerHTML = D.pkgs.length ? D.pkgs.map(p => `<tr>
+        <td class="mono c-cyan">${p.packageCode || ''}</td><td>${p.recipientName || '—'}</td>
+        <td>${badge(p.status)}</td><td>${p.lockerPadId || '—'}</td><td>${p.lockerBayId || '—'}</td>
+        <td class="mono">${p.pickupPasscode ? '••••••' : '—'}</td><td>${rup(p.storageFee)}</td>
+        <td><button class="btn-c sm red" onclick="pkgDel(${p.id})"><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('') : emptyR(8, 'No packages found.');
+        }
+
+        async function pkgCreate() {
+            const d = {
+                packageCode: V('fPkgCode'), recipientName: V('fPkgName'), recipientPhone: V('fPkgPhone'),
+                recipientEmail: V('fPkgEmail'), deliveryAddress: V('fPkgAddr'),
+                courierServiceId: +V('fPkgCourier') || null, lockerPadId: +V('fPkgPad') || null,
+                status: 'REGISTERED', storageFee: 0
+            };
+            try {
+                await api('/api/packages', { method: 'POST', body: d }); toast('Package registered.', 'ok'); mClose('mPkg');
+                ['fPkgCode', 'fPkgName', 'fPkgPhone', 'fPkgEmail', 'fPkgAddr', 'fPkgCourier', 'fPkgPad'].forEach(i => $(i).value = '');
+                loadPkgs();
+            } catch { }
+        }
+
+        async function pkgDel(id) { if (!confirm('Delete package?')) return; try { await api('/api/packages/' + id, { method: 'DELETE' }); toast('Package deleted.', 'ok'); loadPkgs(); } catch { } }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  DRONE LANDINGS                                             */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadLandings() {
+            try { D.landings = await api('/api/lockers/landings') || []; } catch { return; }
+            const rows = [...D.landings].reverse();
+            $('tLandings').innerHTML = rows.length ? rows.map(l => `<tr>
+        <td class="mono c-cyan">${l.landingCode || '—'}</td><td>${l.droneCode || '—'}</td>
+        <td>${l.packageCode || '—'}</td><td>${l.lockerPadId || '—'}</td><td>${l.lockerBayId || '—'}</td>
+        <td>${fmtDT(l.arrivalTime)}</td><td>${rup(l.landingFee)}</td><td>${badge(l.status)}</td>
+    </tr>`).join('') : emptyR(8, 'No landings recorded.');
+        }
+
+        async function landProcess() {
+            const d = { droneCode: V('fLndDrone'), packageCode: V('fLndPkg'), lockerPadId: +V('fLndPad') };
+            if (!d.droneCode || !d.packageCode || !d.lockerPadId) { toast('Fill all fields.', 'err'); return; }
+            try {
+                const r = await api('/api/lockers/landings/process', { method: 'POST', body: d });
+                mClose('mLand');
+                const p = $('rLand'), h = $('rLandH'), b = $('rLandB');
+                if (r.success) {
+                    p.className = 'res-panel'; p.style.borderColor = 'var(--green)';
+                    h.className = 'res-hdr ok'; h.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>Landing Successful</span>';
+                    b.innerHTML = [['Landing Code', r.landingCode], ['Drone', r.droneCode], ['Package', r.packageCode],
+                    ['Assigned Locker', r.bayCode || r.bayId], ['Landing Fee', rup(r.landingFee)],
+                    ['Pickup Passcode', `<span style="color:var(--amber)">${r.pickupPasscode || '******'}</span>`]]
+                        .map(([k, v]) => `<div class="res-row"><span class="res-k">${k}</span><span class="res-v">${v}</span></div>`).join('');
+                    toast('Drone landed!', 'ok');
+                } else {
+                    p.className = 'res-panel err'; p.style.borderColor = 'var(--red)';
+                    h.className = 'res-hdr fail'; h.innerHTML = '<i class="bi bi-x-circle-fill"></i><span>Landing Failed</span>';
+                    b.innerHTML = `<div class="res-row"><span class="res-k">Error</span><span class="res-v" style="color:var(--red)">${r.message}</span></div>`;
+                    toast(r.message, 'err');
+                }
+                p.style.display = 'block';
+                ['fLndDrone', 'fLndPkg', 'fLndPad'].forEach(i => $(i).value = '');
+                loadLandings();
+            } catch { }
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  PACKAGE PICKUP                                             */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function pickupExec() {
+            const code = V('fPickCode'), pass = V('fPickPass');
+            if (!code || !pass) { toast('Fill all fields.', 'err'); return; }
+            try {
+                const r = await api(`/api/packages/${code}/pickup`, { method: 'POST', body: { passcode: pass } });
+                mClose('mPickup');
+                const p = $('rPickup'), h = $('rPickupH'), b = $('rPickupB');
+                if (r.message && r.message.includes('successfully')) {
+                    p.className = 'res-panel'; p.style.borderColor = 'var(--green)';
+                    h.className = 'res-hdr ok'; h.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>Pickup Successful</span>';
+                    b.innerHTML = [['Package', r.packageCode], ['Status', badge('PICKED_UP')],
+                    ['Storage Fee', rup(r.storageFee)], ['Picked Up At', fmtDT(r.pickedUpAt)]]
+                        .map(([k, v]) => `<div class="res-row"><span class="res-k">${k}</span><span class="res-v">${v}</span></div>`).join('');
+                    toast('Package picked up!', 'ok');
+                } else {
+                    p.className = 'res-panel err'; p.style.borderColor = 'var(--red)';
+                    h.className = 'res-hdr fail'; h.innerHTML = '<i class="bi bi-x-circle-fill"></i><span>Pickup Failed</span>';
+                    b.innerHTML = `<div class="res-row"><span class="res-k">Error</span><span class="res-v" style="color:var(--red)">${r.message}</span></div>`;
+                    toast(r.message, 'err');
+                }
+                p.style.display = 'block';
+                $('fPickCode').value = $('fPickPass').value = '';
+                loadLandings();
+            } catch { }
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  INVOICES                                                   */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadInv() {
+            try { D.invoices = await api('/api/invoices') || []; } catch { return; }
+            $('tInv').innerHTML = D.invoices.length ? D.invoices.map(i => `<tr>
+        <td class="mono c-cyan">${i.invoiceNumber || ''}</td><td>${i.customerName || '—'}</td>
+        <td>${i.packageCode || '—'}</td><td>${rup(i.landingFee)}</td><td>${rup(i.storageFee)}</td>
+        <td style="font-weight:600">${rup(i.totalAmount)}</td><td>${badge(i.status)}</td>
+        <td>${fmtD(i.invoiceDate)}</td><td>${fmtD(i.dueDate)}</td>
+    </tr>`).join('') : emptyR(9, 'No invoices found.');
+        }
+
+        async function invCreate() {
+            const d = {
+                invoiceNumber: V('fInvNum'), customerName: V('fInvCust'),
+                courierServiceId: +V('fInvCourier') || null, packageCode: V('fInvPkg'),
+                landingFee: +V('fInvLF') || 0, storageFee: +V('fInvSF') || 0, totalAmount: +V('fInvTotal') || 0,
+                status: V('fInvStat'), invoiceDate: V('fInvDate') || null, dueDate: V('fInvDue') || null
+            };
+            try { await api('/api/invoices', { method: 'POST', body: d }); toast('Invoice created.', 'ok'); mClose('mInv'); loadInv(); } catch { }
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  PAYMENTS                                                   */
+        /* ═══════════════════════════════════════════════════════════ */
+        async function loadPay() {
+            try { D.payments = await api('/api/payments') || []; } catch { return; }
+            $('tPay').innerHTML = D.payments.length ? D.payments.map(p => `<tr>
+        <td class="mono c-cyan">${p.paymentReference || ''}</td><td>${p.invoiceId || '—'}</td>
+        <td style="font-weight:600">${rup(p.amount)}</td><td>${p.paymentMethod || '—'}</td>
+        <td>${badge(p.status)}</td><td>${fmtDT(p.paymentDate)}</td>
+    </tr>`).join('') : emptyR(6, 'No payments found.');
+        }
+
+        async function payCreate() {
+            const d = {
+                paymentReference: V('fPayRef'), invoiceId: +V('fPayInv') || null,
+                amount: +V('fPayAmt') || 0, paymentMethod: V('fPayMethod'), status: V('fPayStat')
+            };
+            try { await api('/api/payments', { method: 'POST', body: d }); toast('Payment recorded.', 'ok'); mClose('mPay'); loadPay(); } catch { }
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  REPORTS                                                    */
+        /* ═══════════════════════════════════════════════════════════ */
+        let chOcc = null, chDel = null;
+
+        async function loadReports() {
+            try {
+                const [a, b, c, d, e, f] = await Promise.all([
+                    api('/api/lockers/landings'), api('/api/packages'), api('/api/invoices'),
+                    api('/api/payments'), api('/api/ledger'), api('/api/lockers/bays')
+                ]);
+                D.landings = a || []; D.pkgs = b || []; D.invoices = c || []; D.payments = d || []; D.ledger = e || []; D.bays = f || [];
+            } catch { }
+
+            const lRev = D.landings.reduce((s, l) => s + (l.landingFee || 0), 0);
+            const sRev = D.pkgs.reduce((s, p) => s + (p.storageFee || 0), 0);
+            const tRev = lRev + sRev;
+            const tExp = D.ledger.filter(e => e.accountType === 'EXPENSE').reduce((s, e) => s + (e.debit || 0), 0);
+            const net = tRev - tExp;
+
+            $('r1').textContent = rup(lRev); $('r2').textContent = rup(sRev);
+            $('r3').textContent = rup(tRev); $('r4').textContent = rup(tExp);
+            const r5 = $('r5'); r5.textContent = rup(net); r5.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+            const delivered = D.pkgs.filter(p => p.status === 'DELIVERED_TO_LOCKER').length;
+            const activePk = D.pkgs.filter(p => p.status && !['PICKED_UP', 'CANCELLED'].includes(p.status)).length;
+            const picked = D.pkgs.filter(p => p.status === 'PICKED_UP').length;
+            $('r6').textContent = D.landings.length; $('r7').textContent = delivered;
+            $('r8').textContent = activePk; $('r9').textContent = picked;
+
+            renderCharts();
+        }
+
+        function renderCharts() {
+            const av = D.bays.filter(b => b.status === 'AVAILABLE').length;
+            const oc = D.bays.filter(b => b.status === 'OCCUPIED').length;
+            const chartFont = { family: "'JetBrains Mono', monospace", size: 11 };
+            const chartColor = '#94a3b8';
+
+            if (chOcc) chOcc.destroy();
+            chOcc = new Chart($('chOcc').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Available', 'Occupied'], datasets: [{ data: [av, oc], backgroundColor: ['#10b981', '#ef4444'], borderColor: ['#064e3b', '#7f1d1d'], borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: chartColor, font: chartFont } } } }
+            });
+
+            const sts = ['REGISTERED', 'IN_TRANSIT', 'DELIVERED_TO_LOCKER', 'PICKED_UP', 'CANCELLED'];
+            const sLbls = ['Registered', 'In Transit', 'Delivered', 'Picked Up', 'Cancelled'];
+            const sCols = ['#3b82f6', '#f59e0b', '#10b981', '#a78bfa', '#ef4444'];
+            const sData = sts.map(s => D.pkgs.filter(p => p.status === s).length);
+
+            if (chDel) chDel.destroy();
+            chDel = new Chart($('chDel').getContext('2d'), {
+                type: 'bar',
+                data: { labels: sLbls, datasets: [{ label: 'Packages', data: sData, backgroundColor: sCols, borderRadius: 3 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: chartColor, font: chartFont, stepSize: 1 }, grid: { color: 'rgba(28,40,64,.4)' } },
+                        x: { ticks: { color: chartColor, font: chartFont }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /*  INIT                                                       */
+        /* ═══════════════════════════════════════════════════════════ */
+        document.addEventListener('DOMContentLoaded', async () => {
+            tick(); setInterval(tick, 60000);
+            await checkStatus();
+            loadDash();
+            $('mBay').addEventListener('hidden.bs.modal', bayFormReset);
+        });
+    </script>
+</body>
+
+</html>
