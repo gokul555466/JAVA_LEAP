@@ -19,6 +19,7 @@ public class LockerBayService {
 
     // 1. Create a bay
     public LockerBay createBay(LockerBay bay) {
+        trimFields(bay);
         if (bay.getStatus() == null || bay.getStatus().trim().isEmpty()) {
             bay.setStatus("AVAILABLE");
         }
@@ -42,6 +43,7 @@ public class LockerBayService {
 
     // 5. Update bay by ID
     public LockerBay updateBay(Long id, LockerBay updatedBay) {
+        trimFields(updatedBay);
         LockerBay existingBay = lockerBayRepository.findById(id).orElse(null);
         if (existingBay != null) {
             existingBay.setBayCode(updatedBay.getBayCode());
@@ -61,5 +63,10 @@ public class LockerBayService {
     // 7. Find available bay for a specific LockerPad
     public LockerBay findAvailableBay(Long lockerPadId) {
         return lockerBayRepository.findFirstByLockerPadIdAndStatus(lockerPadId, "AVAILABLE").orElse(null);
+    }
+
+    private void trimFields(LockerBay bay) {
+        if (bay.getBayCode() != null) bay.setBayCode(bay.getBayCode().trim());
+        if (bay.getPackageCode() != null) bay.setPackageCode(bay.getPackageCode().trim());
     }
 }

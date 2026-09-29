@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +39,7 @@ public class PackageController {
 
     // 1. Create package
     @PostMapping
-    public Package createPackage(@RequestBody Package pkg) {
+    public Package createPackage(@Valid @RequestBody Package pkg) {
         return packageService.createPackage(pkg);
     }
 
@@ -74,7 +75,7 @@ public class PackageController {
 
     // 7. Update package
     @PutMapping("/{id}")
-    public Package updatePackage(@PathVariable Long id, @RequestBody Package updatedPkg) {
+    public Package updatePackage(@PathVariable Long id, @Valid @RequestBody Package updatedPkg) {
         return packageService.updatePackage(id, updatedPkg);
     }
 
@@ -88,7 +89,7 @@ public class PackageController {
     // 9. Pickup package with passcode verification
     @PostMapping("/{packageCode}/pickup")
     public Map<String, Object> pickupPackage(@PathVariable String packageCode,
-                                              @RequestBody PickupRequest pickupRequest) {
+                                              @Valid @RequestBody PickupRequest pickupRequest) {
         Map<String, Object> response = new HashMap<>();
 
         // Find the package

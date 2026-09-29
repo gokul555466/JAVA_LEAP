@@ -19,6 +19,7 @@ public class CourierServiceManager {
 
     // 1. Create a courier service
     public CourierService createCourierService(CourierService courierService) {
+        trimFields(courierService);
         return courierServiceRepository.save(courierService);
     }
 
@@ -44,6 +45,7 @@ public class CourierServiceManager {
 
     // 6. Update courier service by ID
     public CourierService updateCourierService(Long id, CourierService updatedCourierService) {
+        trimFields(updatedCourierService);
         CourierService existingService = courierServiceRepository.findById(id).orElse(null);
         if (existingService != null) {
             existingService.setServiceCode(updatedCourierService.getServiceCode());
@@ -61,5 +63,14 @@ public class CourierServiceManager {
     // 7. Delete courier service by ID
     public void deleteCourierService(Long id) {
         courierServiceRepository.deleteById(id);
+    }
+
+    private void trimFields(CourierService cs) {
+        if (cs.getServiceCode() != null) cs.setServiceCode(cs.getServiceCode().trim());
+        if (cs.getCompanyName() != null) cs.setCompanyName(cs.getCompanyName().trim());
+        if (cs.getContactPerson() != null) cs.setContactPerson(cs.getContactPerson().trim());
+        if (cs.getEmail() != null) cs.setEmail(cs.getEmail().trim());
+        if (cs.getPhone() != null) cs.setPhone(cs.getPhone().trim());
+        if (cs.getAddress() != null) cs.setAddress(cs.getAddress().trim());
     }
 }

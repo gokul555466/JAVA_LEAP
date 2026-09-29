@@ -20,6 +20,7 @@ public class PurchaseOrderService {
 
     // 1. Create purchase order
     public PurchaseOrder createPurchaseOrder(PurchaseOrder po) {
+        trimFields(po);
         if (po.getStatus() == null || po.getStatus().trim().isEmpty()) {
             po.setStatus("CREATED");
         }
@@ -45,6 +46,7 @@ public class PurchaseOrderService {
 
     // 4. Update purchase order
     public PurchaseOrder updatePurchaseOrder(Long id, PurchaseOrder updatedPo) {
+        trimFields(updatedPo);
         PurchaseOrder existing = purchaseOrderRepository.findById(id).orElse(null);
         if (existing != null) {
             existing.setPurchaseOrderNumber(updatedPo.getPurchaseOrderNumber());
@@ -62,5 +64,10 @@ public class PurchaseOrderService {
     // 5. Delete purchase order
     public void deletePurchaseOrder(Long id) {
         purchaseOrderRepository.deleteById(id);
+    }
+
+    private void trimFields(PurchaseOrder po) {
+        if (po.getPurchaseOrderNumber() != null) po.setPurchaseOrderNumber(po.getPurchaseOrderNumber().trim());
+        if (po.getItemName() != null) po.setItemName(po.getItemName().trim());
     }
 }

@@ -3,7 +3,9 @@ package com.gokul.dronelocker.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.gokul.dronelocker.entity.Invoice;
 import com.gokul.dronelocker.repository.InvoiceRepository;
@@ -20,6 +22,7 @@ public class InvoiceService {
 
     // 1. Create invoice
     public Invoice createInvoice(Invoice invoice) {
+        trimFields(invoice);
         // Calculate total
         invoice.setTotalAmount(invoice.getLandingFee() + invoice.getStorageFee());
         if (invoice.getStatus() == null || invoice.getStatus().trim().isEmpty()) {
@@ -31,6 +34,7 @@ public class InvoiceService {
         if (invoice.getDueDate() == null) {
             invoice.setDueDate(LocalDateTime.now().plusDays(30));
         }
+        validateBusinessRules(invoice);
         return invoiceRepository.save(invoice);
     }
 
@@ -67,5 +71,19 @@ public class InvoiceService {
     // 8. Save invoice (used internally by payment service)
     public Invoice saveInvoice(Invoice invoice) {
         return invoiceRepository.save(invoice);
+    }
+
+    private void trimFields(Invoice invoice) {
+        if (invoice.getInvoiceNumber() != null) invoice.setInvoiceNumber(invoice.getInvoiceNumber().trim());
+        if (invoice.getCustomerName() != null) invoice.setCustomerName(invoice.getCustomerName().trim());
+        if (invoice.getPackageCode() != null) invoice.setPackageCode(invoice.getPackageCode().trim());
+    }
+
+    private void validateBusinessRules(Invoice invoice) {
+        if (invoice.getDueDate() != null && invoice.getInvoiceDate() != null
+                && invoice.getDueDate().isBefore(invoice.getInvoiceDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Due date cannot be before invoice date");
+        }
     }
 }

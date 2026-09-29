@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +30,7 @@ public class VendorController {
 
     // 1. Create vendor
     @PostMapping
-    public Vendor createVendor(@RequestBody Vendor vendor) {
+    public Vendor createVendor(@Valid @RequestBody Vendor vendor) {
         return vendorService.createVendor(vendor);
     }
 
@@ -47,7 +48,7 @@ public class VendorController {
 
     // 4. Update vendor
     @PutMapping("/{id}")
-    public Vendor updateVendor(@PathVariable Long id, @RequestBody Vendor updatedVendor) {
+    public Vendor updateVendor(@PathVariable Long id, @Valid @RequestBody Vendor updatedVendor) {
         return vendorService.updateVendor(id, updatedVendor);
     }
 

@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +29,7 @@ public class LockerPadController {
 
     // 1. Create a locker pad
     @PostMapping
-    public LockerPad createPad(@RequestBody LockerPad pad) {
+    public LockerPad createPad(@Valid @RequestBody LockerPad pad) {
         return lockerPadService.createPad(pad);
     }
 

@@ -5,6 +5,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "locker_pads")
@@ -14,14 +19,23 @@ public class LockerPad {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Pad code is required")
+    @Size(min = 1, max = 20, message = "Pad code must be between 1 and 20 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Pad code can contain only letters, numbers, hyphens and underscores")
     private String padCode;
 
+    @NotBlank(message = "Location is required")
+    @Size(min = 2, max = 100, message = "Location must be between 2 and 100 characters")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9\\s,\\-]*$", message = "Location must start with a letter and contain only letters, numbers, spaces, commas and hyphens")
     private String location;
 
+    @Min(value = 0, message = "Total bays must be 0 or greater")
     private int totalBays;
 
+    @Min(value = 0, message = "Available bays must be 0 or greater")
     private int availableBays;
 
+    @PositiveOrZero(message = "Landing tariff must be 0 or greater")
     private double landingTariff;
 
     private boolean active;

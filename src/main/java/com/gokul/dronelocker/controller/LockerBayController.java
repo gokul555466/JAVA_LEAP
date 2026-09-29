@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +30,7 @@ public class LockerBayController {
 
     // 1. Create bay
     @PostMapping
-    public LockerBay createBay(@RequestBody LockerBay bay) {
+    public LockerBay createBay(@Valid @RequestBody LockerBay bay) {
         return lockerBayService.createBay(bay);
     }
 
@@ -53,7 +54,7 @@ public class LockerBayController {
 
     // 5. Update bay by ID
     @PutMapping("/{id}")
-    public LockerBay updateBay(@PathVariable Long id, @RequestBody LockerBay updatedBay) {
+    public LockerBay updateBay(@PathVariable Long id, @Valid @RequestBody LockerBay updatedBay) {
         return lockerBayService.updateBay(id, updatedBay);
     }
 

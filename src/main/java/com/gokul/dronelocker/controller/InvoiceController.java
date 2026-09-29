@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,7 @@ public class InvoiceController {
 
     // 1. Create invoice
     @PostMapping
-    public Invoice createInvoice(@RequestBody Invoice invoice) {
+    public Invoice createInvoice(@Valid @RequestBody Invoice invoice) {
         return invoiceService.createInvoice(invoice);
     }
 

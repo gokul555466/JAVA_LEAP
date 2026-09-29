@@ -8,6 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "purchase_orders")
@@ -17,18 +23,29 @@ public class PurchaseOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Purchase order number is required")
+    @Size(min = 1, max = 30, message = "Purchase order number must be between 1 and 30 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Purchase order number can contain only letters, numbers, hyphens and underscores")
     private String purchaseOrderNumber;
 
+    @Positive(message = "Vendor ID must be a positive number")
     private Long vendorId;
 
+    @NotBlank(message = "Item name is required")
+    @Size(min = 2, max = 100, message = "Item name must be between 2 and 100 characters")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9\\s,'.\\-]*$", message = "Item name must start with a letter and contain only letters, numbers, spaces, commas, dots, apostrophes and hyphens")
     private String itemName;
 
+    @Min(value = 1, message = "Quantity must be at least 1")
     private int quantity;
 
+    @PositiveOrZero(message = "Unit price must be 0 or greater")
     private double unitPrice;
 
+    @PositiveOrZero(message = "Total amount must be 0 or greater")
     private double totalAmount;
 
+    @Pattern(regexp = "^$|^(CREATED|APPROVED|RECEIVED|CANCELLED)$", message = "Status must be CREATED, APPROVED, RECEIVED or CANCELLED")
     private String status;
 
     @Column(name = "order_date")

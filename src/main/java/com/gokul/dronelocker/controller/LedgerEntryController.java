@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,7 @@ public class LedgerEntryController {
 
     // 1. Create ledger entry
     @PostMapping
-    public LedgerEntry createEntry(@RequestBody LedgerEntry entry) {
+    public LedgerEntry createEntry(@Valid @RequestBody LedgerEntry entry) {
         return ledgerEntryService.createEntry(entry);
     }
 

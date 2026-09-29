@@ -8,6 +8,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "invoices")
@@ -17,20 +21,31 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Invoice number is required")
+    @Size(min = 1, max = 30, message = "Invoice number must be between 1 and 30 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Invoice number can contain only letters, numbers, hyphens and underscores")
     private String invoiceNumber;
 
+    @NotBlank(message = "Customer name is required")
+    @Size(min = 2, max = 100, message = "Customer name must be between 2 and 100 characters")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z\\s'\\-]*$", message = "Customer name must start with a letter and contain only letters, spaces, apostrophes and hyphens")
     private String customerName;
 
     private Long courierServiceId;
 
+    @Size(max = 30, message = "Package code must not exceed 30 characters")
     private String packageCode;
 
+    @PositiveOrZero(message = "Landing fee must be 0 or greater")
     private double landingFee;
 
+    @PositiveOrZero(message = "Storage fee must be 0 or greater")
     private double storageFee;
 
+    @PositiveOrZero(message = "Total amount must be 0 or greater")
     private double totalAmount;
 
+    @Pattern(regexp = "^$|^(UNPAID|PAID|CANCELLED)$", message = "Status must be UNPAID, PAID or CANCELLED")
     private String status;
 
     @Column(name = "invoice_date")

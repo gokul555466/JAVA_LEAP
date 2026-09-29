@@ -8,6 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "drone_landings")
@@ -17,12 +23,21 @@ public class DroneLanding {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Size(max = 30, message = "Landing code must not exceed 30 characters")
     private String landingCode;
 
+    @NotBlank(message = "Drone code is required")
+    @Size(min = 1, max = 30, message = "Drone code must be between 1 and 30 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Drone code can contain only letters, numbers, hyphens and underscores")
     private String droneCode;
 
+    @NotBlank(message = "Package code is required")
+    @Size(min = 1, max = 30, message = "Package code must be between 1 and 30 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Package code can contain only letters, numbers, hyphens and underscores")
     private String packageCode;
 
+    @NotNull(message = "Locker pad ID is required")
+    @Positive(message = "Locker pad ID must be a positive number")
     private Long lockerPadId;
 
     private Long lockerBayId;
@@ -33,8 +48,10 @@ public class DroneLanding {
     @Column(name = "departure_time")
     private LocalDateTime departureTime;
 
+    @PositiveOrZero(message = "Landing fee must be 0 or greater")
     private double landingFee;
 
+    @Pattern(regexp = "^(LANDED|COMPLETED|CANCELLED)$", message = "Status must be LANDED, COMPLETED or CANCELLED")
     private String status;
 
     // Public no-argument constructor required by JPA

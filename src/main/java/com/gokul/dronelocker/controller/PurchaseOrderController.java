@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +30,7 @@ public class PurchaseOrderController {
 
     // 1. Create purchase order
     @PostMapping
-    public PurchaseOrder createPurchaseOrder(@RequestBody PurchaseOrder po) {
+    public PurchaseOrder createPurchaseOrder(@Valid @RequestBody PurchaseOrder po) {
         return purchaseOrderService.createPurchaseOrder(po);
     }
 
@@ -47,7 +48,7 @@ public class PurchaseOrderController {
 
     // 4. Update purchase order
     @PutMapping("/{id}")
-    public PurchaseOrder updatePurchaseOrder(@PathVariable Long id, @RequestBody PurchaseOrder updatedPo) {
+    public PurchaseOrder updatePurchaseOrder(@PathVariable Long id, @Valid @RequestBody PurchaseOrder updatedPo) {
         return purchaseOrderService.updatePurchaseOrder(id, updatedPo);
     }
 

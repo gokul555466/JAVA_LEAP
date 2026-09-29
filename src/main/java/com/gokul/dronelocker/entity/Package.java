@@ -8,6 +8,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "packages")
@@ -17,18 +22,30 @@ public class Package {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Package code is required")
+    @Size(min = 1, max = 30, message = "Package code must be between 1 and 30 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Package code can contain only letters, numbers, hyphens and underscores")
     private String packageCode;
 
+    @NotBlank(message = "Recipient name is required")
+    @Size(min = 2, max = 100, message = "Recipient name must be between 2 and 100 characters")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z\\s'\\-]*$", message = "Recipient name must start with a letter and contain only letters, spaces, apostrophes and hyphens")
     private String recipientName;
 
+    @Pattern(regexp = "^$|^[6-9][0-9]{9}$", message = "Enter a valid 10-digit Indian mobile number")
     private String recipientPhone;
 
+    @Email(message = "Enter a valid email address")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
     private String recipientEmail;
 
+    @Size(max = 255, message = "Delivery address must not exceed 255 characters")
     private String deliveryAddress;
 
+    @Size(max = 10, message = "Pickup passcode must not exceed 10 characters")
     private String pickupPasscode;
 
+    @Pattern(regexp = "^$|^(REGISTERED|IN_TRANSIT|DELIVERED_TO_LOCKER|PICKED_UP|CANCELLED)$", message = "Status must be REGISTERED, IN_TRANSIT, DELIVERED_TO_LOCKER, PICKED_UP or CANCELLED")
     private String status;
 
     private Long courierServiceId;
@@ -37,6 +54,7 @@ public class Package {
 
     private Long lockerBayId;
 
+    @PositiveOrZero(message = "Storage fee must be 0 or greater")
     private double storageFee;
 
     @Column(name = "received_at")

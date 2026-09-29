@@ -20,6 +20,7 @@ public class PackageService {
 
     // 1. Create a package
     public Package createPackage(Package pkg) {
+        trimFields(pkg);
         if (pkg.getStatus() == null || pkg.getStatus().trim().isEmpty()) {
             pkg.setStatus("REGISTERED");
         }
@@ -53,6 +54,7 @@ public class PackageService {
 
     // 7. Update package
     public Package updatePackage(Long id, Package updatedPkg) {
+        trimFields(updatedPkg);
         Package existingPkg = packageRepository.findById(id).orElse(null);
         if (existingPkg != null) {
             existingPkg.setPackageCode(updatedPkg.getPackageCode());
@@ -88,5 +90,13 @@ public class PackageService {
     // 10. Save package (used internally by other services)
     public Package savePackage(Package pkg) {
         return packageRepository.save(pkg);
+    }
+
+    private void trimFields(Package pkg) {
+        if (pkg.getPackageCode() != null) pkg.setPackageCode(pkg.getPackageCode().trim());
+        if (pkg.getRecipientName() != null) pkg.setRecipientName(pkg.getRecipientName().trim());
+        if (pkg.getRecipientPhone() != null) pkg.setRecipientPhone(pkg.getRecipientPhone().trim());
+        if (pkg.getRecipientEmail() != null) pkg.setRecipientEmail(pkg.getRecipientEmail().trim());
+        if (pkg.getDeliveryAddress() != null) pkg.setDeliveryAddress(pkg.getDeliveryAddress().trim());
     }
 }

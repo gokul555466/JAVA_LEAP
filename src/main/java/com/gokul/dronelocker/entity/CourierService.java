@@ -5,6 +5,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "courier_services")
@@ -14,16 +18,28 @@ public class CourierService {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Service code is required")
+    @Size(min = 1, max = 20, message = "Service code must be between 1 and 20 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Service code can contain only letters, numbers, hyphens and underscores")
     private String serviceCode;
 
+    @NotBlank(message = "Company name is required")
+    @Size(min = 2, max = 100, message = "Company name must be between 2 and 100 characters")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z\\s'.\\-]*$", message = "Company name must start with a letter and contain only letters, spaces, apostrophes, dots and hyphens")
     private String companyName;
 
+    @Size(max = 100, message = "Contact person name must not exceed 100 characters")
+    @Pattern(regexp = "^$|^[A-Za-z][A-Za-z\\s'\\-]*$", message = "Contact person name must start with a letter and contain only letters, spaces, apostrophes and hyphens")
     private String contactPerson;
 
+    @Email(message = "Enter a valid email address")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
 
+    @Pattern(regexp = "^$|^[6-9][0-9]{9}$", message = "Enter a valid 10-digit Indian mobile number")
     private String phone;
 
+    @Size(max = 255, message = "Address must not exceed 255 characters")
     private String address;
 
     private boolean active;

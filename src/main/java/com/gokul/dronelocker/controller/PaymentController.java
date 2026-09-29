@@ -2,6 +2,7 @@ package com.gokul.dronelocker.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,7 @@ public class PaymentController {
 
     // 1. Record payment
     @PostMapping
-    public Payment recordPayment(@RequestBody Payment payment) {
+    public Payment recordPayment(@Valid @RequestBody Payment payment) {
         return paymentService.recordPayment(payment);
     }
 

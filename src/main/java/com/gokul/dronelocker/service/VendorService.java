@@ -19,6 +19,7 @@ public class VendorService {
 
     // 1. Create vendor
     public Vendor createVendor(Vendor vendor) {
+        trimFields(vendor);
         return vendorRepository.save(vendor);
     }
 
@@ -34,6 +35,7 @@ public class VendorService {
 
     // 4. Update vendor
     public Vendor updateVendor(Long id, Vendor updatedVendor) {
+        trimFields(updatedVendor);
         Vendor existing = vendorRepository.findById(id).orElse(null);
         if (existing != null) {
             existing.setVendorCode(updatedVendor.getVendorCode());
@@ -50,5 +52,13 @@ public class VendorService {
     // 5. Delete vendor
     public void deleteVendor(Long id) {
         vendorRepository.deleteById(id);
+    }
+
+    private void trimFields(Vendor v) {
+        if (v.getVendorCode() != null) v.setVendorCode(v.getVendorCode().trim());
+        if (v.getVendorName() != null) v.setVendorName(v.getVendorName().trim());
+        if (v.getContactPerson() != null) v.setContactPerson(v.getContactPerson().trim());
+        if (v.getEmail() != null) v.setEmail(v.getEmail().trim());
+        if (v.getPhone() != null) v.setPhone(v.getPhone().trim());
     }
 }

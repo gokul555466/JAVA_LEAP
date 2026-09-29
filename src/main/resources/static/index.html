@@ -162,28 +162,6 @@
             margin-bottom: 6px;
         }
 
-        .status-line {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-family: var(--mono);
-            font-size: .7rem;
-        }
-
-        .dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 8px var(--green);
-            flex-shrink: 0;
-        }
-
-        .dot.off {
-            background: var(--red);
-            box-shadow: 0 0 8px var(--red);
-        }
-
         /* mobile */
         .s-toggle {
             display: none;
@@ -855,13 +833,6 @@
             <div class="s-nav-item" data-sec="reports" onclick="go('reports')"> <i
                     class="bi bi-bar-chart-line"></i>Reports</div>
         </nav>
-        <div class="s-footer">
-            <div class="lbl">System Status</div>
-            <div class="status-line">
-                <span class="dot" id="sDot"></span>
-                <span id="sTxt" style="color:var(--green)">Checking…</span>
-            </div>
-        </div>
     </aside>
 
     <!-- ████████  MAIN  ████████ -->
@@ -1670,14 +1641,8 @@
         async function checkStatus() {
             try {
                 await api('/api/lockers/pads'); online = true;
-                $('sDot').classList.remove('off');
-                $('sTxt').textContent = 'BACKEND CONNECTED';
-                $('sTxt').style.color = 'var(--green)';
             } catch {
                 online = false;
-                $('sDot').classList.add('off');
-                $('sTxt').textContent = 'BACKEND OFFLINE';
-                $('sTxt').style.color = 'var(--red)';
             }
         }
 
