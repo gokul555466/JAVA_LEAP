@@ -1552,19 +1552,95 @@
             try {
                 const r = await fetch(API + url, cfg);
                 if (!r.ok) {
-                    let msg = `HTTP ${r.status}`;
-                    try { const t = await r.text(); if (t) msg += ': ' + t; } catch (_) { }
-                    throw new Error(msg);
+                    let payload = null;
+                    try { payload = await r.json(); } catch (_) { }
+                    throw new Error(formatApiError(payload));
                 }
                 const txt = await r.text();
                 if (!txt) return null;
                 try { return JSON.parse(txt); } catch (_) { return txt; }
             } catch (e) {
-                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+                if (e instanceof TypeError && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')))
                     toast('Unable to connect to backend.', 'err');
-                else toast(e.message, 'err');
+                else toast(e instanceof Error ? e.message : 'Something went wrong. Please try again.', 'err');
                 throw e;
             }
+        }
+
+        function formatApiError(payload) {
+            if (payload && payload.errors && typeof payload.errors === 'object') {
+                const errors = Object.entries(payload.errors);
+                if (errors.length) {
+                    return errors.map(([field, message]) =>
+                        `• ${friendlyFieldLabel(field)}: ${friendlyFieldMessage(field, message)}`
+                    ).join('\n').replace(/^/, 'Please fix the following:\n');
+                }
+            }
+            return friendlyErrorMessage(payload && typeof payload.message === 'string'
+                ? payload.message : 'Something went wrong. Please try again.');
+        }
+
+        function friendlyFieldLabel(field) {
+            const key = field.toLowerCase();
+            if (key.includes('recipient') && key.includes('name')
+                || key.includes('customer') && key.includes('name')
+                || key.includes('contact') && key.includes('name')
+                || key === 'vendorname' || key === 'companyname') return 'Name';
+            if (key.includes('phone')) return 'Phone';
+            if (key.includes('email')) return 'Email';
+            if (key.includes('location') || key.includes('address')) return 'Location';
+            if (key.endsWith('id')) return 'ID';
+            return field.replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/^./, character => character.toUpperCase());
+        }
+
+        function friendlyFieldMessage(field, message) {
+            const key = field.toLowerCase();
+            const text = typeof message === 'string' ? message.toLowerCase() : '';
+            if (text.includes('required') || text.includes('blank') || text.includes('null'))
+                return 'This field is required.';
+            if (key.includes('phone')) return 'Enter a valid 10-digit mobile number.';
+            if (key.includes('email')) return 'Enter a valid email address.';
+            if (key.includes('name')) return 'Please enter a valid name.';
+            if (key.includes('location') || key.includes('address'))
+                return 'Please enter a valid location.';
+            if (key.endsWith('id')) return 'Please enter a valid ID.';
+            if (key.includes('status') || key.includes('type') || key.includes('method'))
+                return 'Please select a valid option.';
+            if (text.includes('positive') || text.includes('negative'))
+                return 'Please enter a positive number.';
+            if (key.includes('date') || key.includes('time')) return 'Please enter a valid date.';
+            if (key.includes('amount') || key.includes('fee') || key.includes('price')
+                || key.includes('tariff') || key.includes('quantity') || key.includes('bays'))
+                return 'Please enter a valid number.';
+            if (key.endsWith('code') || key.includes('reference') || key.includes('number'))
+                return 'Please enter a valid ID.';
+            return friendlyErrorMessage(message);
+        }
+
+        function friendlyErrorMessage(message) {
+            if (typeof message !== 'string' || !message.trim())
+                return 'Something went wrong. Please try again.';
+            const text = message.trim();
+            const normalized = text.toLowerCase();
+            if (normalized.includes('not found')) return 'The requested record was not found.';
+            if (normalized.includes('duplicate') || normalized.includes('already exists'))
+                return 'This value already exists.';
+            if (normalized.includes('passcode')) return 'The passcode is incorrect.';
+            if (normalized.includes('no available bay'))
+                return 'No locker bay is available at this location.';
+            if (normalized.includes('not available for pickup'))
+                return 'This package is not available for pickup.';
+            if (normalized.includes('date') && (normalized.includes('before')
+                || normalized.includes('after') || normalized.includes('range')))
+                return 'End date must be after start date.';
+            if (normalized.includes('exception') || normalized.includes('sql')
+                || normalized.includes('database') || normalized.includes('validation failed')
+                || normalized.includes('stack trace') || normalized.includes(' at '))
+                return 'Something went wrong. Please try again.';
+            if (normalized.includes('invalid') || normalized.includes('must be'))
+                return 'Please check your information and try again.';
+            return text;
         }
 
         /* ═══════════════════════════════════════════════════════════ */
@@ -1576,7 +1652,14 @@
             const icons = { ok: 'bi-check-circle-fill', err: 'bi-x-circle-fill', inf: 'bi-info-circle-fill' };
             const cols = { ok: 'var(--green)', err: 'var(--red)', inf: 'var(--cyan)' };
             el.className = 'toast-msg ' + type;
-            el.innerHTML = `<i class="bi ${icons[type]}" style="color:${cols[type]};font-size:.95rem"></i><span>${msg}</span>`;
+            const icon = document.createElement('i');
+            icon.className = `bi ${icons[type]}`;
+            icon.style.color = cols[type];
+            icon.style.fontSize = '.95rem';
+            const text = document.createElement('span');
+            text.textContent = msg;
+            text.style.whiteSpace = 'pre-line';
+            el.append(icon, text);
             box.appendChild(el);
             setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .25s'; setTimeout(() => el.remove(), 300); }, 4000);
         }
@@ -1898,8 +1981,10 @@
                 } else {
                     p.className = 'res-panel err'; p.style.borderColor = 'var(--red)';
                     h.className = 'res-hdr fail'; h.innerHTML = '<i class="bi bi-x-circle-fill"></i><span>Landing Failed</span>';
-                    b.innerHTML = `<div class="res-row"><span class="res-k">Error</span><span class="res-v" style="color:var(--red)">${r.message}</span></div>`;
-                    toast(r.message, 'err');
+                    b.innerHTML = '<div class="res-row"><span class="res-k">Error</span><span class="res-v" style="color:var(--red)"></span></div>';
+                    const message = friendlyErrorMessage(r.message);
+                    b.querySelector('.res-v').textContent = message;
+                    toast(message, 'err');
                 }
                 p.style.display = 'block';
                 ['fLndDrone', 'fLndPkg', 'fLndPad'].forEach(i => $(i).value = '');
@@ -1927,8 +2012,10 @@
                 } else {
                     p.className = 'res-panel err'; p.style.borderColor = 'var(--red)';
                     h.className = 'res-hdr fail'; h.innerHTML = '<i class="bi bi-x-circle-fill"></i><span>Pickup Failed</span>';
-                    b.innerHTML = `<div class="res-row"><span class="res-k">Error</span><span class="res-v" style="color:var(--red)">${r.message}</span></div>`;
-                    toast(r.message, 'err');
+                    b.innerHTML = '<div class="res-row"><span class="res-k">Error</span><span class="res-v" style="color:var(--red)"></span></div>';
+                    const message = friendlyErrorMessage(r.message);
+                    b.querySelector('.res-v').textContent = message;
+                    toast(message, 'err');
                 }
                 p.style.display = 'block';
                 $('fPickCode').value = $('fPickPass').value = '';
